@@ -19,6 +19,7 @@ import net.minecraft.util.CubicSampler;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.phys.Vec3;
 
 import java.io.IOException;
@@ -42,6 +43,12 @@ public class VMinecraftInstance implements IMinecraftInstance {
     public float getTickDelta() {
         return minecraft.getFrameTime();
     }
+
+    @Override
+    public long getMillis() {
+        return net.minecraft.Util.getMillis();
+    }
+
     public Vector getPlayerEyePosition() {
         return Vector.fromVec(minecraft.player.getEyePosition(getTickDelta()));
     }
@@ -116,8 +123,12 @@ public class VMinecraftInstance implements IMinecraftInstance {
     public float getViewYRot() {
         return minecraft.player.getViewYRot(getTickDelta());
     }
-    public float getCameraLookVectorTwilight(float h) {
-        return minecraft.gameRenderer.getMainCamera().getLookVector().dot(new Vector3f(h, 0.0F, 0.0F));
+
+    @Override
+    public float getCameraLookVectorTwilight(float h, float rotate) {
+        Vector3f v = minecraft.gameRenderer.getMainCamera().getLookVector();
+        v.transform(Vector3f.YP.rotation(rotate * 0.0174533F));
+        return v.dot(new Vector3f(h, 0.0F, 0.0F));
     }
 
     public BlockPos getPlayerBlockPosition() {
@@ -155,7 +166,7 @@ public class VMinecraftInstance implements IMinecraftInstance {
         return minecraft.level.getBiome(getPlayerBlockPosition()).getDownfall() > 0 ? 1 : 0;
     }
     public boolean getBiomeSnow() {
-        return minecraft.level.getBiome(getPlayerBlockPosition()).shouldSnow(minecraft.level, getPlayerBlockPosition());
+        return minecraft.level.getBiome(getPlayerBlockPosition()).getBaseTemperature() <= 0.15;
     }
     public boolean isRightClicking() {
         return minecraft.mouseHandler.isRightPressed();
@@ -222,12 +233,50 @@ public class VMinecraftInstance implements IMinecraftInstance {
         return c;
     }
 
-    public boolean disableFogChanges() {
-        return minecraft.cameraEntity != null && (minecraft.cameraEntity.isInWater() || minecraft.cameraEntity.isInLava() || minecraft.player.hasEffect(MobEffects.BLINDNESS));
+    @Override
+    public double[] getBiomeWaterFogColor() {
+        double[] c = new double[3];
+        Util.getRealFogColor = true;
+        Vec3 vec = CubicSampler.gaussianSampleVec3(minecraft.player.position(), (ix, jx, kx) -> {
+            return Vec3.fromRGB24((minecraft.level.getBiome(new BlockPos(ix, jx, kx))).getWaterFogColor());
+        });
+        Util.getRealFogColor = false;
+        c[0] = vec.x;
+        c[1] = vec.y;
+        c[2] = vec.z;
+        return c;
     }
+
+    @Override
+    public float getWaterVision() {
+        return minecraft.player.getWaterVision();
+    }
+
+    @Override
+    public boolean doesBiomeHaveCloserFog() {
+        return false;
+    }
+
     public boolean isCameraInWater() {
-        return minecraft.cameraEntity != null && minecraft.cameraEntity.isInWater();
+        return minecraft.cameraEntity != null && minecraft.cameraEntity.isEyeInFluid(FluidTags.WATER);
     }
+
+    @Override
+    public boolean isCameraInLava() {
+        return minecraft.cameraEntity != null && minecraft.cameraEntity.isEyeInFluid(FluidTags.LAVA);
+    }
+
+    @Override
+    public boolean isCameraInPowderedSnow() {
+        // Powdered snow does not exist in 1.16
+        return false;
+    }
+
+    @Override
+    public boolean isCameraBlinded() {
+        return minecraft.player.hasEffect(MobEffects.BLINDNESS);
+    }
+
     public double getNightVisionModifier() {
         if (!doesPlayerExist() || !minecraft.player.hasEffect(MobEffects.NIGHT_VISION))
             return 0;

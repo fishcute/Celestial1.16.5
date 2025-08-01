@@ -28,11 +28,6 @@ public class CelestialForge {
         }
     }
     public CelestialForge() {
-        try {
-            Class.forName("kotlin.Unit");
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException("Kotlin is not loaded. Please install Kotlin for Forge. \n https://modrinth.com/mod/kotlin-for-forge");
-        }
         Celestial.init();
         ClientRegistry.registerKeyBinding(reloadSky);
         MinecraftForge.EVENT_BUS.register(CelestialForge.class);

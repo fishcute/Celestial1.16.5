@@ -30,15 +30,6 @@ dependencies {
 
     shadowCommon(implementation(project(":CelestialExpressions")))
     shadowCommon(implementation(project(":CelestialMain")))
-
-    modImplementation 'thedarkcolour:kotlinforforge:1.17.0'
-}
-
-repositories {
-    maven {
-        name = 'Kotlin for Forge'
-        url = 'https://thedarkcolour.github.io/KotlinForForge/'
-    }
 }
 
 processResources {

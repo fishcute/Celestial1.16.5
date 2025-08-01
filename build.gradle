@@ -1,10 +1,6 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     id "architectury-plugin" version "3.4-SNAPSHOT"
     id "dev.architectury.loom" version "1.3-SNAPSHOT" apply false
-
-    id 'org.jetbrains.kotlin.jvm' version '1.8.20-Beta'
 }
 
 architectury {
@@ -24,7 +20,6 @@ subprojects {
         mappings loom.officialMojangMappings()
         // The following line declares the yarn mappings you may select this one as well.
         // mappings "net.fabricmc:yarn:@YARN_MAPPINGS@:v2"
-
     }
 }
 
@@ -32,8 +27,6 @@ allprojects {
     apply plugin: "java"
     apply plugin: "architectury-plugin"
     apply plugin: "maven-publish"
-
-    apply plugin: "org.jetbrains.kotlin.jvm"
 
     archivesBaseName = rootProject.archives_base_name
     version = rootProject.mod_version
@@ -52,22 +45,12 @@ allprojects {
         options.release.set(8)
     }
 
-    tasks.withType(KotlinCompile.class).configureEach {
-        kotlinOptions {
-            jvmTarget = "1.8"
-        }
-    }
-
     java {
         withSourcesJar()
 
 //        toolchain {
 //            languageVersion = JavaLanguageVersion.of(8)
 //        }
-    }
-
-    dependencies {
-        compileOnly "org.jetbrains.kotlin:${rootProject.kotlin}"
     }
 }
 
